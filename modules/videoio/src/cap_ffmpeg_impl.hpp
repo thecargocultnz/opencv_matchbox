@@ -2191,6 +2191,21 @@ double CvCapture_FFMPEG::get_fps() const
     double fps = r2d(ic->streams[video_stream]->r_frame_rate);
 #endif
 
+    // Prefer r_frame_rate over avg_frame_rate when they agree within 0.1%.
+    // avg_frame_rate can be slightly wrong for effectively-CFR files that have
+    // an anomalous frame duration (e.g. encoder flush at end of stream),
+    // while r_frame_rate reflects the actual per-frame tick spacing.
+    {
+        const AVStream* st = ic->streams[video_stream];
+        if (st->r_frame_rate.num > 0 && st->avg_frame_rate.num > 0)
+        {
+            int64_t a = (int64_t)st->r_frame_rate.num * st->avg_frame_rate.den;
+            int64_t b = (int64_t)st->avg_frame_rate.num * st->r_frame_rate.den;
+            if (500 * a > 499 * b && 500 * a < 501 * b)
+                fps = r2d(st->r_frame_rate);
+        }
+    }
+
 #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(55, 1, 100) && LIBAVFORMAT_VERSION_MICRO >= 100
     if (fps < eps_zero)
     {
