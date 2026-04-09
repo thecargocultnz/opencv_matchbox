@@ -605,6 +605,7 @@ struct CvCapture_FFMPEG
     int read_timeout;
     AVInterruptCallbackMetadata interrupt_metadata;
 #endif
+    int image_seq_start = -1;  // image sequence start_number, -1 means unset
 
     bool setRaw();
     bool processRawPacket();
@@ -1146,6 +1147,10 @@ bool CvCapture_FFMPEG::open(const char* _filename, int index, const Ptr<IStreamR
         {
             nThreads = requestedThreads = params.get<int>(CAP_PROP_N_THREADS);
         }
+        if (params.has(CAP_PROP_IMAGE_SEQ_START))
+        {
+            image_seq_start = params.get<int>(CAP_PROP_IMAGE_SEQ_START, 0);
+        }
         if (params.warnUnusedParameters())
         {
             CV_LOG_ERROR(NULL, "VIDEOIO/FFMPEG: unsupported parameters in .open(), see logger INFO channel for details. Bailout");
@@ -1179,6 +1184,10 @@ bool CvCapture_FFMPEG::open(const char* _filename, int index, const Ptr<IStreamR
 #else
         av_dict_set(&dict, "rtsp_transport", "tcp", 0);
 #endif
+    }
+    if (image_seq_start >= 0)
+    {
+        av_dict_set_int(&dict, "start_number", image_seq_start, 0);
     }
     CV_FFMPEG_FMT_CONST AVInputFormat* input_format = NULL;
     AVDictionaryEntry* entry = av_dict_get(dict, "input_format", NULL, 0);
