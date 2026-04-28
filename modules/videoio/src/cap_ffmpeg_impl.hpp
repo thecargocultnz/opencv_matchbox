@@ -624,6 +624,7 @@ struct CvCapture_FFMPEG
     int use_opencl;
     int extraDataIdx;
     int requestedThreads;
+    int image_seq_start;  // image2 demuxer start_number; -1 means unset
 };
 
 void CvCapture_FFMPEG::init()
@@ -678,6 +679,7 @@ void CvCapture_FFMPEG::init()
     use_opencl = 0;
     extraDataIdx = 1;
     requestedThreads = cv::getNumberOfCPUs();
+    image_seq_start = -1;
 }
 
 
@@ -1149,7 +1151,7 @@ bool CvCapture_FFMPEG::open(const char* _filename, int index, const Ptr<IStreamR
         }
         if (params.has(CAP_PROP_IMAGE_SEQ_START))
         {
-            image_seq_start = params.get<int>(CAP_PROP_IMAGE_SEQ_START, 0);
+            image_seq_start = params.get<int>(CAP_PROP_IMAGE_SEQ_START);
         }
         if (params.warnUnusedParameters())
         {
