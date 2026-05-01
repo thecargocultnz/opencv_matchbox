@@ -605,7 +605,6 @@ struct CvCapture_FFMPEG
     int read_timeout;
     AVInterruptCallbackMetadata interrupt_metadata;
 #endif
-    int image_seq_start = -1;  // image sequence start_number, -1 means unset
 
     bool setRaw();
     bool processRawPacket();
